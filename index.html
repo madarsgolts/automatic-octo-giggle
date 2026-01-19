@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phyllotaxis Glow</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, #1d2b64 0%, #0b0f1f 45%, #070910 100%);
+      color: #e9f1ff;
+    }
+
+    main {
+      width: min(900px, 92vw);
+      padding: 2.5rem 2rem;
+      display: grid;
+      gap: 1.75rem;
+      background: rgba(7, 10, 25, 0.65);
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      letter-spacing: 0.04em;
+    }
+
+    p {
+      margin: 0;
+      color: rgba(233, 241, 255, 0.72);
+      line-height: 1.5;
+    }
+
+    canvas {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 20px;
+      background: radial-gradient(circle at center, rgba(37, 121, 255, 0.15), rgba(4, 8, 20, 0.9));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.5rem;
+      font-size: 0.95rem;
+      color: rgba(233, 241, 255, 0.75);
+    }
+
+    .legend span {
+      display: inline-flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .legend i {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Phyllotaxis Glowfield</h1>
+      <p>
+        A simple phyllotaxis spiral whose petals brighten as they orbit. The dot
+        sizes pulse with a slow-wave sine, creating a living, breathing pattern.
+      </p>
+    </header>
+    <canvas id="spiral" width="1280" height="720" aria-label="Animated spiral visualization"></canvas>
+    <div class="legend">
+      <span style="color:#7ad7ff"><i></i>Newer growth</span>
+      <span style="color:#d6a1ff"><i></i>Mid bloom</span>
+      <span style="color:#ffcf6e"><i></i>Outer glow</span>
+    </div>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("spiral");
+    const ctx = canvas.getContext("2d");
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+    const maxDots = 1400;
+
+    function resizeCanvas() {
+      const scale = window.devicePixelRatio || 1;
+      const { width, height } = canvas.getBoundingClientRect();
+      canvas.width = Math.floor(width * scale);
+      canvas.height = Math.floor(height * scale);
+      ctx.scale(scale, scale);
+    }
+
+    resizeCanvas();
+    window.addEventListener("resize", () => {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      resizeCanvas();
+    });
+
+    function draw(time) {
+      const { width, height } = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, width, height);
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
+
+      const t = time * 0.0012;
+      for (let i = 0; i < maxDots; i += 1) {
+        const radius = 4 + 0.45 * Math.sqrt(i) * 10;
+        const angle = i * goldenAngle + t * 0.6;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+
+        const wave = Math.sin(t + i * 0.02);
+        const size = 1.5 + 2.8 * (0.5 + 0.5 * wave);
+
+        const hue = 210 + (i % 300) * 0.6;
+        const alpha = 0.25 + 0.65 * (i / maxDots);
+
+        ctx.beginPath();
+        ctx.fillStyle = `hsla(${hue}, 85%, ${55 + wave * 15}%, ${alpha})`;
+        ctx.shadowColor = `hsla(${hue}, 90%, 70%, 0.7)`;
+        ctx.shadowBlur = 12;
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+      requestAnimationFrame(draw);
+    }
+
+    requestAnimationFrame(draw);
+  </script>
+</body>
+</html>
